@@ -29,8 +29,8 @@ void main() {
 }
 )";
 
-GLuint shaderProgram;
-GLuint VAO, VBO;
+GLuint shaderProgram{};
+GLuint VAO{}, VBO{};
 
 void setupShaders() {
 	// Compile vertex shader
@@ -55,6 +55,7 @@ void setupShaders() {
 }
 
 void setupBox() {
+	// float vertices[] = {
 	std::array<float, 8> vertices = {
 		-boxSize, -boxSize, // bottom left
 		boxSize,  -boxSize, // bottom right
@@ -62,7 +63,7 @@ void setupBox() {
 		-boxSize, boxSize	// top left
 	};
 
-	std::array<std::uint8_t, 6> indices = {
+	std::array<std::uint32_t, 8> indices = {
 		0, 1, 2, // first triangle
 		0, 2, 3	 // second triangle
 	};
@@ -70,16 +71,16 @@ void setupBox() {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 
-	GLuint EBO;
+	GLuint EBO{};
 	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices.data()), vertices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices.data()), indices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices.data(), GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(0);
