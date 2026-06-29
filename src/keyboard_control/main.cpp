@@ -1,118 +1,164 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <array>
+#include <cstdint>
+#include <cstdio>
 #include <fmt/base.h>
-#include <iostream>
 
-// Vertex shader source
+// Box position
+float boxX = 0.0f;
+float boxY = 0.0f;
+const float boxSize = 0.1f;
+const float moveSpeed = 0.01f;
+
+// Shader sources
 const char *vertexShaderSource = R"(
 #version 330 core
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec2 aPos;
+uniform vec2 uOffset;
 void main() {
-    gl_Position = vec4(aPos, 1.0);
+    gl_Position = vec4(aPos.x + uOffset.x, aPos.y + uOffset.y, 0.0, 1.0);
 }
 )";
 
-// Fragment shader source
 const char *fragmentShaderSource = R"(
 #version 330 core
 out vec4 FragColor;
 void main() {
-    FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+    FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red
 }
 )";
 
-int main() {
-	fmt::println("Hello, clangd + CMake!");
+GLuint shaderProgram;
+GLuint VAO, VBO;
 
-	// Initialize GLFW
-	if (!glfwInit()) {
-		std::cerr << "Failed to initialize GLFW\n";
-		return -1;
-	}
-
-	// Configure OpenGL version
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	// Create window
-	GLFWwindow *window = glfwCreateWindow(800, 600, "Hello Triangle", nullptr, nullptr);
-	if (!window) {
-		std::cerr << "Failed to create window\n";
-		glfwTerminate();
-		return -1;
-	}
-	glfwMakeContextCurrent(window);
-
-	// Initialize GLEW
-	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK) {
-		std::cerr << "Failed to initialize GLEW\n";
-		return -1;
-	}
-
-	// Triangle vertices
-	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, // bottom left
-		0.5f,  -0.5f, 0.0f, // bottom right
-		0.0f,  0.5f,  0.0f	// top
-	};
-
-	// Create VAO
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	// Create VBO
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// Link vertex attributes
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-	glEnableVertexAttribArray(0);
-
-	// Create vertex shader
-	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+void setupShaders() {
+	// Compile vertex shader
+	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
 	glCompileShader(vertexShader);
 
-	// Create fragment shader
-	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	// Compile fragment shader
+	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
 	glCompileShader(fragmentShader);
 
-	// Create shader program
-	unsigned int shaderProgram = glCreateProgram();
+	// Link shaders
+	shaderProgram = glCreateProgram();
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
 	glLinkProgram(shaderProgram);
 
-	// Clean up shaders
+	// Clean up
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+}
 
-	// Main loop
+void setupBox() {
+	std::array<float, 8> vertices = {
+		-boxSize, -boxSize, // bottom left
+		boxSize,  -boxSize, // bottom right
+		boxSize,  boxSize,	// top right
+		-boxSize, boxSize	// top left
+	};
+
+	std::array<std::uint8_t, 6> indices = {
+		0, 1, 2, // first triangle
+		0, 2, 3	 // second triangle
+	};
+
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+
+	GLuint EBO;
+	glGenBuffers(1, &EBO);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices.data()), vertices.data(), GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices.data()), indices.data(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void keyCallback(GLFWwindow *window, int key, [[maybe_unused]] int scancode, int action, [[maybe_unused]] int mods) {
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+		switch (key) {
+		case GLFW_KEY_UP:
+			boxY += moveSpeed;
+			fmt::println("Up pressed - Box position: ({:.3f}, {:.3f})", boxX, boxY);
+			break;
+		case GLFW_KEY_DOWN:
+			boxY -= moveSpeed;
+			fmt::println("Down pressed - Box position: ({:.3f}, {:.3f})", boxX, boxY);
+			break;
+		case GLFW_KEY_LEFT:
+			boxX -= moveSpeed;
+			fmt::println("Left pressed - Box position: ({:.3f}, {:.3f})", boxX, boxY);
+			break;
+		case GLFW_KEY_RIGHT:
+			boxX += moveSpeed;
+			fmt::println("Right pressed - Box position: ({:.3f}, {:.3f})", boxX, boxY);
+			break;
+		case GLFW_KEY_ESCAPE:
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
+			break;
+		}
+	}
+}
+
+auto main() -> int {
+	fmt::println("Hello OpenGL - Arrow Keys to Move Box!");
+
+	if (!glfwInit()) {
+		fmt::print(stderr, "Failed to initialize GLFW\n");
+		return -1;
+	}
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Modern OpenGL
+
+	GLFWwindow *window = glfwCreateWindow(800, 600, "Moving Box", nullptr, nullptr);
+	if (!window) {
+		fmt::print(stderr, "Failed to create window\n");
+		glfwTerminate();
+		return -1;
+	}
+
+	glfwMakeContextCurrent(window);
+	glfwSetKeyCallback(window, keyCallback);
+
+	if (glewInit() != GLEW_OK) {
+		fmt::print(stderr, "Failed to initialize GLEW\n");
+		return -1;
+	}
+
+	fmt::println("OpenGL version: {}", reinterpret_cast<const char *>(glGetString(GL_VERSION)));
+	fmt::println("Use arrow keys to move the red box. Press ESC to exit.");
+
+	setupShaders();
+	setupBox();
+
 	while (!glfwWindowShouldClose(window)) {
-		// Clear screen
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Draw triangle
 		glUseProgram(shaderProgram);
+		glUniform2f(glGetUniformLocation(shaderProgram, "uOffset"), boxX, boxY);
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
-		// Swap buffers and poll events
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
-	// Clean up
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(shaderProgram);
 
 	glfwTerminate();
 	return 0;
