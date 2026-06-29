@@ -59,9 +59,10 @@ include(project_dependencies.cmake)
 #=========================
 # Targets
 #=========================
-add_subdirectory(src/basic_triangle)
-add_subdirectory(src/keyboard_control)
-add_subdirectory(src/jumper)
+add_subdirectory(src/1_basic_triangle)
+add_subdirectory(src/2_keyboard_control)
+add_subdirectory(src/3_jumper)
+add_subdirectory(src/4_collision)
 
 #=========================
 # Tests & Coverage
