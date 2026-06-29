@@ -1,0 +1,2 @@
+- fix: currenlty if landing on object, down velocity keeps adding up
+- generalize, create general object, and collision system. able to detect if touching ground or object, then act accordingly
