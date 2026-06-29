@@ -6,7 +6,7 @@
 #include <fmt/base.h>
 #include <unordered_set>
 
-class SimpleMario {
+class JumperGame {
   private:
 	// Player state
 	float playerX = 0.0f;
@@ -150,7 +150,7 @@ class SimpleMario {
 	// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 	static void keyCallback(GLFWwindow *window, int key, [[maybe_unused]] int scancode, int action,
 							[[maybe_unused]] int mods) {
-		auto *game = static_cast<SimpleMario *>(glfwGetWindowUserPointer(window));
+		auto *game = static_cast<JumperGame *>(glfwGetWindowUserPointer(window));
 
 		if (action == GLFW_PRESS) {
 			game->keysPressed.insert(key);
@@ -254,6 +254,6 @@ class SimpleMario {
 };
 
 auto main() -> int {
-	SimpleMario game;
+	JumperGame game;
 	return game.run();
 }
