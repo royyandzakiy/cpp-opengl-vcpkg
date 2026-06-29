@@ -59,16 +59,8 @@ include(project_dependencies.cmake)
 #=========================
 # Targets
 #=========================
-# Add or remove targets as needed
-if(BUILD_APP)
-  add_subdirectory(src/myapp) # standalone hello-world binary
-endif()
-if(BUILD_LIB)
-  add_subdirectory(src/mylib) # library + installable MyLib package (handles its own staging)
-endif()
-if(BUILD_EXAMPLES)
-  add_subdirectory(examples) # AFTER src/mylib so the example can link the MyLib target
-endif()
+add_subdirectory(src/basic_triangle)
+add_subdirectory(src/keyboard_control)
 
 #=========================
 # Tests & Coverage

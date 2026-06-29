@@ -19,7 +19,7 @@ option(BUILD_TESTING "Build the unit tests under test/" OFF)
 option(BUILD_EXAMPLES "Build the examples/ demos (MyLib consumer, Tracy/Perfetto examples, …)" OFF)
 
 # ------ Package Manager ------
-set(PKG_MANAGER "vcpkg" CACHE STRING "Dependency provider: vcpkg | conan | none")
+set(PKG_MANAGER "conan" CACHE STRING "Dependency provider: vcpkg | conan | none")
 # set(PKG_MANAGER "conan" CACHE STRING "Dependency provider: vcpkg | conan | none")
 set_property(CACHE PKG_MANAGER PROPERTY STRINGS vcpkg conan none)
 if(PKG_MANAGER STREQUAL "vcpkg")
